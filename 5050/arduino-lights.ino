@@ -5,7 +5,7 @@ const byte LED_RED = 9; // D9
 const byte LED_BLUE = 10; // D10
 const byte LED_GREEN = 11; // D11
 
-const byte UPDATE_DELAY_MS = 1500;
+const int UPDATE_DELAY_MS = 800;
 
 /**
  * Color RGB definitions, assuming full brightness.
@@ -37,7 +37,7 @@ const int COLORS[] = {
   &WHITE
 };
 
-byte brightness_ = 255;
+byte brightness_ = 10;
 byte red_ = 0;
 byte green_ = 0;
 byte blue_ = 0;
@@ -48,18 +48,20 @@ int index_ = 0;
 void setup() {
   Serial.begin(9600);
   printDebugHeader();
+
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
-
-  Serial.print("DELAY:");
-  Serial.print(UPDATE_DELAY_MS);
 
   Serial.println();
   Serial.println("Setup complete!");
 }
 
 void loop() {
+  cycleColors();
+}
+
+void cycleColors() {
   setColorIndex(index_ % 9);
   index_ += 1;
 
@@ -72,6 +74,19 @@ void setColorIndex(int index) {
   const byte g = *(addr + 1);
   const byte b = *(addr + 2);
   const byte rgb[3] = {r, g, b};
+  setColor(rgb, brightness_);
+}
+
+void setColor(byte* rgb, byte brightness) {
+  float normBrightness = float(brightness) / 255;
+  byte r = rgb[0] * normBrightness;
+  byte g = rgb[1] * normBrightness;
+  byte b = rgb[2] * normBrightness;
+
+  rgb[0] = r;
+  rgb[1] = g;
+  rgb[2] = b;
+
   setRgb(rgb);
 }
 
@@ -85,10 +100,6 @@ void setRgb(byte* rgb) {
   analogWrite(LED_RED, red_);
   analogWrite(LED_GREEN, green_);
   analogWrite(LED_BLUE, blue_);
-}
-
-void setColor(byte rgb, byte brightness) {
-  setRgb(rgb);
 }
 
 void setOff() {
@@ -123,4 +134,12 @@ void printDebugHeader() {
     Serial.print(LED_GREEN);
     Serial.println();
   }
+}
+
+void detectInput() {
+  // TODO
+}
+
+void onButtonPressed() {
+  // TODO
 }
