@@ -48,7 +48,7 @@ const byte framesPerSecond_ = 120;
 enum Brightness: byte {Low = 10, Medium = 127, High = 255};
 enum Mode: byte { Static = 0, Animated = 1, Mixed = 2};
 
-byte mode_ = Mode::Animated;
+byte mode_ = Mode::Static;
 byte mixedModeAnimatedPixelFrequency = 4; // 1 in n pixels will be animated
 byte brightness_ = Brightness::High;
 int brightnessPotValue_ = 0; // Position of potentiometer that controls brightness
@@ -127,7 +127,7 @@ void loop() {
     patterns_[patternIndex_]();
   }
   else if (mode_ == Mode::Static) {
-    staticColor();
+    staticColor(true);
   }
   else if (mode_ == Mode::Mixed) {
     patterns_[patternIndex_]();
