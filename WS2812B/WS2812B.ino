@@ -1,4 +1,5 @@
 #include <FastLED.h>
+#include "input-buttons.cpp"
 FASTLED_USING_NAMESPACE
 
 // FastLED "100-lines-of-code" demo reel, showing just a few
@@ -34,6 +35,7 @@ FASTLED_USING_NAMESPACE
 #define NUM_LEDS    150
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
+#define NUM_MODES 3
 #define BRIGHTNESS_POT_PIN 3
 #define MODE_BUTTON_PIN 6
 #define NEXT_BUTTON_PIN 5
@@ -41,24 +43,67 @@ FASTLED_USING_NAMESPACE
 // Available values for temperature/correction can be found at https://github.com/FastLED/FastLED/blob/master/color.h
 #define COLOR_CORRECTION TypicalPixelString
 #define COLOR_TEMPERATURE ClearBlueSky
+
+
+
 CRGB leds[NUM_LEDS];
 
 const byte framesPerSecond_ = 120;
 
 enum Brightness: byte {Low = 10, Medium = 127, High = 255};
-enum Mode: byte { Static = 0, Animated = 1, Mixed = 2};
+enum Mode: byte {
+  Static = 0,             // All lights same color, no animation
+  MonochromeAnimated = 1,  // All lights same base hue with animation
+  Animated = 2,           // Animations with any color
+};
 
-byte mode_ = Mode::Static;
+byte mode_ = Mode::Animated;
 byte mixedModeAnimatedPixelFrequency = 4; // 1 in n pixels will be animated
 byte brightness_ = Brightness::High;
 int brightnessPotValue_ = 0; // Position of potentiometer that controls brightness
-bool modeButtonPressed_ = false;
-bool nextButtonPressed_ = false;
 
 
-byte patternIndex_ = 0; // Index number of which pattern is current
-byte hue_ = 0; // rotating "base color" used by many of the patterns
-byte staticColorIndex_ = 0;
+byte pattern_index_ = 0; // Index of current pattern
+byte monochrome_pattern_index_ = 0; // Index of current monochrome pattern
+int hue_ = 0; // rotating "base color" used by many of the patterns
+byte static_color_index_ = 0;
+
+
+class ModeButtonHandler: public AbstractButtonHandler {
+public:
+  ModeButtonHandler(byte pin): AbstractButtonHandler(pin) {
+
+  }
+
+  void onButtonPressed() {
+    switch (mode_) {
+      case Mode::Static:
+        nextStaticColor();
+        break;
+      case Mode::MonochromeAnimated:
+        nextMonochromePattern();
+        break;
+      case Mode::Animated:
+        nextPattern();
+        break;
+    }
+  }
+
+  void onLongPress() {
+    nextMode();
+    Serial.println(mode_);
+  }
+
+  void onLongPressHeld() {
+    if (mode_ == Mode::MonochromeAnimated) {
+      hue_++;
+    }
+  }
+};
+
+
+// Input handlers
+ModeButtonHandler modeButtonHandler(MODE_BUTTON_PIN);
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
@@ -70,71 +115,70 @@ const SimplePatternList patterns_ = {
   juggle,
   bpm,
 };
+const SimplePatternList monochrome_patterns_ = {
+  confetti,
+  sinelon,
+  juggle,
+  bpm,
+};
 
 // Available color definitions can be found at https://github.com/FastLED/FastLED/blob/master/pixeltypes.h
 const CRGB::HTMLColorCode colors_[] = {
   CRGB::Purple,
-  CRGB::HotPink,
+  CRGB::White,
   CRGB::Red,
+  CRGB::OrangeRed,
+  CRGB::Yellow,
   CRGB::Green,
-  CRGB::Lime,
   CRGB::Cyan,
   CRGB::Blue,
-  CRGB::Yellow,
 };
-
-
 
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Start");
-
-  setupInput();
+  Serial.println("Starting...");
 
   delay(3000); // 3 second delay for recovery
+
+  setupInputHandlers();
 
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(COLOR_CORRECTION);
   FastLED.setTemperature(COLOR_TEMPERATURE);
+  Serial.println("OK GO");
 }
 
 void loop() {
-  readInput();
+  updateInputHandlers();
 
-  EVERY_N_MILLISECONDS(20) {
-    // slowly cycle the "base color" through the rainbow
-    hue_++;
-  }
-  EVERY_N_SECONDS(10) {
-    // change patterns periodically
-    nextPattern();
-  }
-  EVERY_N_SECONDS(3) {
-    nextStaticColor();
-  }
+  // EVERY_N_MILLISECONDS(20) {
+  //   // slowly cycle the "base color" through the rainbow
+  //   hue_++;
+  // }
+  // EVERY_N_SECONDS(10) {
+  //   // change patterns periodically
+  //   nextPattern();
+  // }
+  // EVERY_N_SECONDS(3) {
+  //   nextStaticColor();
+  // }
   // EVERY_N_SECONDS(5) {
   //   mode_ = !mode_;
   // }
-  Serial.print("Brightness pot value: ");
-  Serial.println(brightnessPotValue_);
-  Serial.print("Mode button pressed: ");
-  Serial.println(modeButtonPressed_);
-  Serial.println();
 
-  if (mode_ == Mode::Animated) {
-    // Call the current pattern function once, updating the 'leds' array
-    patterns_[patternIndex_]();
+  switch (mode_) {
+    case Mode::Static:
+      staticColor();
+      break;
+    case Mode::MonochromeAnimated:
+      monochrome_patterns_[monochrome_pattern_index_]();
+      break;
+    case Mode::Animated:
+      hue_++;
+      patterns_[pattern_index_]();
+      break;
   }
-  else if (mode_ == Mode::Static) {
-    staticColor(true);
-  }
-  else if (mode_ == Mode::Mixed) {
-    patterns_[patternIndex_]();
-    staticColor(true);
-  }
-
-  // do some periodic updates
 
   draw();
 }
@@ -145,17 +189,16 @@ void draw() {
   FastLED.delay(1000 / framesPerSecond_);
 }
 
-void setupInput() {
-  pinMode(MODE_BUTTON_PIN, INPUT);
-  pinMode(NEXT_BUTTON_PIN, INPUT);
-
-  digitalWrite(MODE_BUTTON_PIN, HIGH);
-  digitalWrite(NEXT_BUTTON_PIN, HIGH);
+void setupInputHandlers() {
+  modeButtonHandler.setup();
 }
 
-void readInput() {
+void updateInputHandlers() {
+  modeButtonHandler.update();
+
   brightnessPotValue_ = analogRead(BRIGHTNESS_POT_PIN);
 
+  // Handle fuzziness at extreme positions to avoid flickering.
   if (brightnessPotValue_ < 20) {
     brightness_ = 0;
   }
@@ -165,26 +208,27 @@ void readInput() {
   else {
     brightness_ = map(brightnessPotValue_, 0, 1023, 0, 255);
   }
-  Serial.println();
-  Serial.print("Brightness:" );
-  Serial.print(brightness_);
-
-  modeButtonPressed_ = !digitalRead(MODE_BUTTON_PIN);
-  nextButtonPressed_ = !digitalRead(NEXT_BUTTON_PIN);
 }
 
 void nextPattern() {
-  // add one to the current pattern number, and wrap around at the end
-  patternIndex_ = (patternIndex_ + 1) % ARRAY_SIZE(patterns_);
+  pattern_index_ = (pattern_index_ + 1) % ARRAY_SIZE(patterns_);
+}
+
+void nextMonochromePattern() {
+  monochrome_pattern_index_ = (monochrome_pattern_index_ + 1) % ARRAY_SIZE(monochrome_patterns_);
 }
 
 void nextStaticColor() {
-  staticColorIndex_ = (staticColorIndex_ + 1) % ARRAY_SIZE(colors_);
+  static_color_index_ = (static_color_index_ + 1) % ARRAY_SIZE(colors_);
+}
+
+void nextMode() {
+  mode_ = (mode_ + 1) % NUM_MODES;
 }
 
 void rainbow() {
   // FastLED's built-in rainbow generator
-  fill_rainbow( leds, NUM_LEDS, hue_, 7);
+  fill_rainbow(leds, NUM_LEDS, hue_, 7);
 }
 
 void rainbowWithGlitter() {
@@ -193,57 +237,48 @@ void rainbowWithGlitter() {
   addGlitter(80);
 }
 
-void addGlitter( fract8 chanceOfGlitter) {
-  if( random8() < chanceOfGlitter) {
+void addGlitter(fract8 chanceOfGlitter) {
+  if(random8() < chanceOfGlitter) {
     leds[ random16(NUM_LEDS) ] += CRGB::Pink;
   }
 }
 
 void confetti() {
   // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
+  fadeToBlackBy(leds, NUM_LEDS, 10);
   int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( hue_ + random8(64), 200, 255);
+  leds[pos] += CHSV(hue_ + random8(64), 200, 255);
 }
 
 void sinelon() {
   // a colored dot sweeping back and forth, with fading trails
-  fadeToBlackBy( leds, NUM_LEDS, 20);
-  int pos = beatsin16( 13, 0, NUM_LEDS-1 );
-  leds[pos] += CHSV( hue_, 255, 192);
+  fadeToBlackBy(leds, NUM_LEDS, 20);
+  int pos = beatsin16(13, 0, NUM_LEDS-1 );
+  leds[pos] += CHSV(hue_, 255, 192);
 }
 
 void bpm() {
   // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
   byte BeatsPerMinute = 62;
   CRGBPalette16 palette = PartyColors_p;
-  byte beat = beatsin8( BeatsPerMinute, 64, 255);
-  for( int i = 0; i < NUM_LEDS; i++) { //9948
+  byte beat = beatsin8(BeatsPerMinute, 64, 255);
+  for (int i = 0; i < NUM_LEDS; i++) { //9948
     leds[i] = ColorFromPalette(palette, hue_+(i*2), beat-hue_+(i*10));
   }
 }
 
-void staticColor(bool mixed = false) {
-  if (mixed) {
-    for (int dot = 0; dot < NUM_LEDS; dot++) {
-      if (dot % mixedModeAnimatedPixelFrequency != 0) {
-        leds[dot] = colors_[staticColorIndex_];
-      }
-    }
-  }
-  else {
-    for (int dot = 0; dot < NUM_LEDS; dot++) {
-      leds[dot] = colors_[staticColorIndex_];
-    }
+void staticColor() {
+  for (int dot = 0; dot < NUM_LEDS; dot++) {
+    leds[dot] = colors_[static_color_index_];
   }
 }
 
 void juggle() {
   // eight colored dots, weaving in and out of sync with each other
-  fadeToBlackBy( leds, NUM_LEDS, 20);
+  fadeToBlackBy(leds, NUM_LEDS, 20);
   byte dothue = 0;
-  for( int i = 0; i < 8; i++) {
-    leds[beatsin16( i+7, 0, NUM_LEDS-1 )] |= CHSV(dothue, 200, 255);
+  for (int i = 0; i < 8; i++) {
+    leds[beatsin16(i+7, 0, NUM_LEDS-1 )] |= CHSV(dothue, 200, 255);
     dothue += 32;
   }
 }
