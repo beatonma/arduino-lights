@@ -1,3 +1,4 @@
+#define FASTLED_INTERNAL // Disable pragma version message on compilation
 #include <FastLED.h>
 #include "WS2812B.h"
 #include "input-buttons.cpp"
