@@ -16,21 +16,6 @@ protected:
   unsigned long action_started_timestamp_ = 0;
   unsigned long current_timestamp_ = 0;
 
-  void debug(String message) {
-    Serial.print("[");
-    Serial.print(pin_);
-    Serial.print("] ");
-    Serial.println(message);
-  }
-
-  void debug(String message, int value) {
-    Serial.print("[");
-    Serial.print(pin_);
-    Serial.print("] ");
-    Serial.print(message);
-    Serial.println(value);
-  }
-
 public:
   // How long (milliseconds) does a button need to be pressed to count as a press)
   static const int MIN_PRESS_DURATION = 50;
@@ -112,38 +97,3 @@ public:
     current_timestamp_ = 0;
   }
 };
-
-
-// class ModeButtonHandler: public AbstractButtonHandler {
-// public:
-//   ModeButtonHandler(byte pin): AbstractButtonHandler(pin) {
-
-//   }
-
-//   void onButtonDown() {
-//     debug("onButtonDown()");
-//   }
-
-//   void onButtonUp() {
-//     debug("onButtonUp()");
-//   }
-
-//   void onLongPress() {
-//     debug("onLongPress()");
-//   }
-
-//   void onButtonToggle() {
-//     debug("onButtonToggle()");
-//   }
-
-//   void onButtonPressed() {
-//     debug("onButtonPressed()");
-//     Serial.println();
-//   }
-
-//   void onLongPressHeld() {
-
-//   }
-// };
-
-
