@@ -1,4 +1,5 @@
 #include <FastLED.h>
+#include "WS2812B.h"
 #include "input-buttons.cpp"
 FASTLED_USING_NAMESPACE
 
