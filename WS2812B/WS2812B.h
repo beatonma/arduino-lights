@@ -32,4 +32,12 @@ class ModeButtonHandler: public AbstractButtonHandler {
   void onLongPress();
   void onLongPressHeld();
 };
+
+class OptionButtonHandler: public AbstractButtonHandler {
+  public:
+  OptionButtonHandler(byte pin): AbstractButtonHandler(pin) {}
+  void onButtonPressed();
+  void onLongPress();
+};
+
 #endif
