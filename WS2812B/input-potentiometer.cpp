@@ -16,11 +16,11 @@ public:
 
   virtual void onValueChanged(int new_value) = 0;
 
-  void setup() {
+  void setup(void) {
 
   }
 
-  void update()
+  void update(void)
   {
     current_value_ = analogRead(pin_);
     if (current_value_ != previous_value_) {

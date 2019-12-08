@@ -43,14 +43,14 @@ public:
   virtual void onLongPressHeld() {}
 
   // Called in arduino setup() function
-  void setup()
+  void setup(void)
   {
     pinMode(pin_, INPUT);
     digitalWrite(pin_, HIGH);
   }
 
   // Called in arduino loop() function
-  void update()
+  void update(void)
   {
     current_value_ = !digitalRead(pin_);
     current_timestamp_ = millis();
