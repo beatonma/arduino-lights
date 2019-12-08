@@ -38,7 +38,7 @@ byte brightness_ = MAX_BRIGHTNESS;
 byte pattern_index_ = 0;             // Index of current pattern
 byte monochrome_pattern_index_ = 0;  // Index of current monochrome pattern
 byte static_color_index_ = 0;        // Index of current static color.
-CHSV static_color_hsv_;
+// CHSV static_color_hsv_;
 
 // Input handlers
 ModeButtonHandler mode_button_handler_(MODE_BUTTON_PIN);
@@ -55,9 +55,9 @@ AnimationList patterns_ = {
     animations::animationJuggle,   animations::animationBpm,
 };
 AnimationList monochrome_patterns_ = {
-    // monochromeJuggle,
+    animations::monochromeGlitter,
+    animations::monochromeJuggle,
     // animations::animationBpm,
-    // animations::animationRainbow,
 };
 
 // Available color definitions can be found at
@@ -154,8 +154,8 @@ void nextStaticColor(void) {
   static_color_index_ = (static_color_index_ + 1) % ARRAY_SIZE(colors_);
   CRGB next_color = getCurrentColor();
 
-  static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
-  animations::hue_ = static_color_hsv_.hue;
+  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
+  animations::hue_ = animations::static_color_hsv_.hue;
   // fillStaticColor();
   blendColors(current_color, next_color);
 }
@@ -167,22 +167,12 @@ void nextMode(void) {
   }
 }
 
-
-void monochromeJuggle(void) {
-  // four colored dots, weaving in and out of sync with each other
-  fadeToBlackBy(leds, NUM_LEDS, 20);
-  for (int i = 0; i < 4; i++) {
-    leds[beatsin16(i + 3, 0, NUM_LEDS - 1)] |= CHSV(
-        static_color_hsv_.hue, static_color_hsv_.sat, static_color_hsv_.val);
-  }
-}
-
 void animatePowerOn(void) {
   // Animation that runs when the device is switched on.
   updateInputHandlers();
 
-  static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
-  animations::hue_ = static_color_hsv_.hue;
+  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
+  animations::hue_ = animations::static_color_hsv_.hue;
 
   fadeToBlackBy(leds, NUM_LEDS, 255);
   FastLED.setBrightness(brightness_);
