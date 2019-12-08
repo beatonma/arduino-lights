@@ -3,49 +3,43 @@
 #include "input-buttons.cpp"
 #include "input-potentiometer.cpp"
 
+#define NUM_MODES 3
 enum Mode: byte {
   Static = 0,              // All lights same color, no animation
   MonochromeAnimated = 1,  // All lights same base hue with animation
   Animated = 2,            // Animations with any color
 };
 
-void setupInputHandlers();
-void updateInputHandlers();
+void setupInputHandlers(void);
+void updateInputHandlers(void);
 
-void nextPattern();
-void nextMonochromePattern();
-void nextStaticColor();
-void nextMode();
+void nextPattern(void);
+void nextMonochromePattern(void);
+void nextStaticColor(void);
+void nextMode(void);
 
 // Animations with any color
-void animatePowerOn();
-void animationAddGlitter(fract8 chanceOfGlitter);
-void animationBpm();
-void animationConfetti();
-void animationJuggle();
-void animationRainbow();
-void animationRainbowWithGlitter();
-void animationSinelon();
+void animatePowerOn(void);
 
-// Animatinos that use a single color
-void monochromeJuggle();
+// Animations that use a single color
+void monochromeJuggle(void);
 
 // Solid, non animated color - all lights are the same
-void fillStaticColor();
-CRGB getCurrentColor();
+void fillStaticColor(void);
+CRGB getCurrentColor(void);
 void blendColors(CRGB currentColor, CRGB nextColor, int speed = 30);
 
 class ModeButtonHandler: public AbstractButtonHandler {
   public:
   ModeButtonHandler(byte pin): AbstractButtonHandler(pin) {}
-  void onButtonPressed();
+  void onButtonPressed(void);
 };
 
 class OptionButtonHandler: public AbstractButtonHandler {
   public:
   OptionButtonHandler(byte pin): AbstractButtonHandler(pin) {}
-  void onButtonPressed();
-  void onLongPress();
+  void onButtonPressed(void);
+  void onLongPress(void);
 };
 
 class BrightnessPotentiometerHandler: public AbstractPotentiometerHandler {
