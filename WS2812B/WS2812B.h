@@ -21,9 +21,6 @@ void nextMode(void);
 // Animations with any color
 void animatePowerOn(void);
 
-// Animations that use a single color
-void monochromeJuggle(void);
-
 // Solid, non animated color - all lights are the same
 void fillStaticColor(void);
 CRGB getCurrentColor(void);
