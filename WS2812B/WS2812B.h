@@ -43,6 +43,9 @@ class BrightnessPotentiometerHandler: public AbstractPotentiometerHandler {
   public:
   BrightnessPotentiometerHandler(byte pin): AbstractPotentiometerHandler(pin) {}
   void onValueChanged(int value);
+  void onValueChangedNoModifier(int value);       // Called when the pot is turned with no other inputs
+  void onValueChangedWithModeButton(int value);   // Called when the pot is turned while the Mode button is held down
+  // void onValueChangedWithOptionButton(int value); // Called when the pot is turned while the Option button is held down
 };
 
 #endif
