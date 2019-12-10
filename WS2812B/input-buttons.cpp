@@ -25,22 +25,26 @@ public:
   // Triggered when button is released after being pressed for
   // a duration between MIN_PRESS_DURATION and LONG_PRESS_DURATION
   // i.e. a simple press and release
-  virtual void onButtonPressed() = 0;
+  virtual void onButtonPressed(void) = 0;
 
   // Triggered once when the button is held down for LONG_PRESS_DURATION
-  virtual void onLongPress() {}
+  virtual void onLongPress(void) {}
 
   // Triggered before onButtonDown and onButtonUp
-  virtual void onButtonToggle() {}
+  virtual void onButtonToggle(void) {}
 
   // Triggered once when the button is pressed down
-  virtual void onButtonDown() {}
+  virtual void onButtonDown(void) {}
 
   // Triggered once when the button is released
-  virtual void onButtonUp() {}
+  virtual void onButtonUp(void) {}
 
   // Triggered continuously for as long as the button is held after LONG_PRESS_DURATION
-  virtual void onLongPressHeld() {}
+  virtual void onLongPressHeld(void) {}
+
+  bool isDown(void) const {
+    return action_started_timestamp_ != 0;
+  }
 
   // Called in arduino setup() function
   void setup(void)
