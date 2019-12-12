@@ -36,7 +36,6 @@ FASTLED_USING_NAMESPACE
 CRGB leds_[NUM_LEDS];
 
 byte frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
-float animation_speed_multiplier_ = 1.0f;
 
 byte mode_ = Mode::Static;
 byte brightness_ = MAX_BRIGHTNESS;
@@ -61,8 +60,10 @@ AnimationList full_color_animations_ = {
 };
 AnimationList monochrome_animations_ = {
     animations::monochromeGlitter,
-    animations::monochromePulse,
+    animations::monochromeSinelon,
     animations::monochromeJuggle,
+    animations::monochromePulse,
+    animations::monochromeRainbow,
 };
 
 // Available color definitions can be found at
@@ -103,6 +104,9 @@ void setup(void) {
 
 void loop(void) {
   updateInputHandlers();
+  EVERY_N_MILLISECONDS(20) {
+    animations::hue_++;
+  }
 
   switch (mode_) {
     case Mode::Static:
@@ -111,9 +115,6 @@ void loop(void) {
       monochrome_animations_[monochrome_pattern_index_](leds_);
       break;
     case Mode::Animated:
-      EVERY_N_MILLISECONDS(20) {
-        animations::hue_++;
-      }
       full_color_animations_[pattern_index_](leds_);
       break;
   }
@@ -259,10 +260,10 @@ void BrightnessPotentiometerHandler::onValueChangedNoModifier(const int value) {
 
 void BrightnessPotentiometerHandler::onValueChangedWithModeButton(const int value) {
   // Change animation speed by holding Mode button while turning the brightness pot.
-  animation_speed_multiplier_ = (float) map(value, 0, 1023, 1, 20) / 10.f;
-  frames_per_second_ = animation_speed_multiplier_ * FRAMES_PER_SECOND_DEFAULT;
+  animations::animation_speed_multiplier_ = (float) map(value, 0, 1023, 1, 20) / 10.f;
+  frames_per_second_ = animations::animation_speed_multiplier_ * FRAMES_PER_SECOND_DEFAULT;
 
-  PRINT(animation_speed_multiplier_);
+  PRINT(animations::animation_speed_multiplier_);
   PRINT("x -> ");
   PRINT(frames_per_second_);
   PRINTLN("fps");

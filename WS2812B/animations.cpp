@@ -7,6 +7,7 @@ namespace animations {
 #define GLITTER_COLOR CRGB::Pink
 
 byte hue_ = 0;
+float animation_speed_multiplier_ = 1.0f;
 
 void animationRainbow(CRGB leds[]) {
   // FastLED's built-in rainbow generator
