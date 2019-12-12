@@ -70,17 +70,17 @@ AnimationList monochrome_animations_ = {
 // TODO replace HTMLColorCode with palletes (via PALETTEOF) for each color so we
 // can mix in 'themes' like cloud/lava/ocean:
 // https://github.com/FastLED/FastLED/blob/master/colorpalettes.h
-const CRGB::HTMLColorCode colors_[] = {
-    CRGB::Purple,
-    // CRGB::HotPink,
-    CRGB::FairyLightNCC,
-    CRGB::White,
-    CRGB::OrangeRed,
-    CRGB::Red,
-    CRGB::Yellow,
-    CRGB::Green,
-    CRGB::Cyan,
-    CRGB::Blue,
+const ColorCode colors_[] = {
+    ColorCode::Purple,
+    ColorCode::HotPink,
+    ColorCode::FairyLightNCC,
+    ColorCode::White,
+    ColorCode::OrangeRed,
+    ColorCode::Red,
+    ColorCode::Yellow,
+    ColorCode::Green,
+    ColorCode::Cyan,
+    ColorCode::Blue,
 };
 
 void setup(void) {
@@ -175,7 +175,7 @@ void animatePowerOn(void) {
   FastLED.setBrightness(brightness_);
 
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds_[i] = CRGB::Purple;
+    leds_[i] = toCRGB(ColorCode::Purple);
 
     FastLED.show();
     delay(1000 / frames_per_second_);
@@ -200,7 +200,7 @@ void fillStaticColor(void) {
 }
 
 CRGB getCurrentColor(void) {
-  return colors_[static_color_index_];
+  return toCRGB(colors_[static_color_index_]);
 }
 
 void ModeButtonHandler::onButtonPressed(void) {
