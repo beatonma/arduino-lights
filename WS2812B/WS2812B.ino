@@ -2,12 +2,13 @@
 #include "debug.h"
 
 #define FASTLED_INTERNAL  // Disable pragma version message on compilation
+#include <stdint.h>
 #include "arrays.h"
+#include <FastLED.h>
 #include "animations.h"
 #include "colors.h"
 #include "hardware-config.h"
 #include "WS2812B.h"
-#include <FastLED.h>
 FASTLED_USING_NAMESPACE
 
 
@@ -35,15 +36,15 @@ FASTLED_USING_NAMESPACE
 
 CRGB leds_[NUM_LEDS];
 
-byte frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
+uint8_t frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
 
-byte mode_ = Mode::Static;
-byte brightness_ = MAX_BRIGHTNESS;
+uint8_t mode_ = Mode::Static;
+uint8_t brightness_ = MAX_BRIGHTNESS;
 
-byte animation_index_ = 0;             // Index of current pattern.
-byte monochrome_animation_index_ = 0;  // Index of current monochrome pattern.
-byte static_color_index_ = 0;          // Index of current static color.
-byte palette_index_ = 0;               // Index of current color palette.
+uint8_t animation_index_ = 0;             // Index of current pattern.
+uint8_t monochrome_animation_index_ = 0;  // Index of current monochrome pattern.
+uint8_t static_color_index_ = 0;          // Index of current static color.
+uint8_t palette_index_ = 0;               // Index of current color palette.
 
 // Input handlers
 ModeButtonHandler mode_button_handler_(MODE_BUTTON_PIN);
