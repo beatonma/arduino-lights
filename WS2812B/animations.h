@@ -9,10 +9,11 @@ FASTLED_USING_NAMESPACE
 
 namespace animations {
 #define CHANCE_OF_GLITTER 80
-extern byte hue_;
+extern uint8_t hue_;
 extern CHSV static_color_hsv_;
 extern float animation_speed_multiplier_;
 extern CRGBPalette16 palette_;
+extern uint8_t transition_progress_;
 
 // Animations with any color
 void animationAddGlitter(CRGB leds[], fract8 chance_of_glitter = CHANCE_OF_GLITTER);
@@ -31,7 +32,12 @@ void monochromePulse(CRGB leds[]);
 void monochromeRainbow(CRGB leds[]);
 
 // Palette animations
-void paletteAnimation(CRGB leds[]);
+void paletteFlow(CRGB leds[]);
+void paletteGlitter(CRGB leds[]);
+
+// Transitional animations
+void transitionFadeToSolid(CRGB leds[], CRGB target_color);
+void transitionLinearToSolid(CRGB leds[], CRGB target_color);
 
 }  // namespace animations
 
