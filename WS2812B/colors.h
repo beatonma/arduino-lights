@@ -1,9 +1,13 @@
 #include <FastLED.h>
 
+#define PALETTEOFEIGHT(A, B, C, D, E, F, G, H) CRGBPalette16(toCRGB(A), toCRGB(B), toCRGB(C), toCRGB(D), toCRGB(E), toCRGB(F), toCRGB(G), toCRGB(H), toCRGB(A), toCRGB(B), toCRGB(C), toCRGB(D), toCRGB(E), toCRGB(F), toCRGB(G), toCRGB(H))
+#define PALETTEOFFOUR(A, B, C, D) PALETTEOFEIGHT(A, B, C, D, A, B, C, D)
+#define PALETTEOFTWO(A, B) PALETTEOFFOUR(A, B, A, B)
+#define PALETTEOFONE(A) PALETTEOFTWO(A, A)
+
 // Predefined RGB colors
 // Slightly modified from
 // https://github.com/FastLED/FastLED/blob/master/pixeltypes.h
-// TODO Enable use of these in place of CRGB::HTMLColorCode
 typedef enum : uint32_t {
   AliceBlue = 0xF0F8FF,
   Amethyst = 0x9966CC,
@@ -164,7 +168,33 @@ typedef enum : uint32_t {
 
 } ColorCode;
 
-
 CRGB toCRGB(const ColorCode color_code) {
     return CRGB(color_code);
 }
+
+FASTLED_USING_NAMESPACE
+CRGBPalette16 unicornPalette() {
+  return CRGBPalette16(
+    ColorCode::Purple,
+    ColorCode::Purple,
+    ColorCode::Purple,
+    ColorCode::HotPink,
+
+    ColorCode::LightCyan,
+    ColorCode::Coral,
+    ColorCode::Aquamarine,
+    ColorCode::LightPink,
+
+    ColorCode::Purple,
+    ColorCode::LightPink,
+    ColorCode::DeepPink,
+    ColorCode::DeepPink,
+
+    ColorCode::LightPink,
+    ColorCode::HotPink,
+    ColorCode::LightPink,
+    ColorCode::HotPink
+  );
+}
+
+FASTLED_NAMESPACE_END
