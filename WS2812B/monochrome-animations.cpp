@@ -9,7 +9,7 @@ CHSV static_color_hsv_ = CHSV(0, 0, 0);
 
 void monochromeJuggle(CRGB leds[]) {
   // four colored dots, weaving in and out of sync with each other
-  fadeToBlackBy(leds, NUM_LEDS, 20);
+  FADE(20);
   for (int i = 0; i < 3; i++) {
     leds[beatsin16(i + 4, 0, NUM_LEDS - 1)] |= CHSV(
         static_color_hsv_.hue, static_color_hsv_.sat, static_color_hsv_.val);
@@ -17,7 +17,7 @@ void monochromeJuggle(CRGB leds[]) {
 }
 
 void monochromeGlitter(CRGB leds[]) {
-  fadeToBlackBy(leds, NUM_LEDS, 3);
+  FADE(3);
   if (random8() < CHANCE_OF_GLITTER) {
     leds[random16(NUM_LEDS)] += static_color_hsv_;
   }
@@ -26,7 +26,7 @@ void monochromeGlitter(CRGB leds[]) {
 void monochromeSinelon(CRGB leds[]) {
   // Similar to animationSinelon but all lights stay on at a low level
   // with the sweep 'overlayed'
-  fadeToBlackBy(leds, NUM_LEDS, 5);
+  FADE(5);
   for (int i = 0; i < NUM_LEDS; i++) {
     leds[i] |= CHSV(static_color_hsv_.hue, static_color_hsv_.sat, 60);
   }
