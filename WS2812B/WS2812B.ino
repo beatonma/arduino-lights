@@ -1,4 +1,4 @@
-// #define DEBUG
+#define DEBUG
 #include "debug.h"
 
 #define FASTLED_INTERNAL  // Disable pragma version message on compilation
@@ -40,9 +40,10 @@ byte frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
 byte mode_ = Mode::Static;
 byte brightness_ = MAX_BRIGHTNESS;
 
-byte pattern_index_ = 0;             // Index of current pattern
-byte monochrome_pattern_index_ = 0;  // Index of current monochrome pattern
-byte static_color_index_ = 0;        // Index of current static color.
+byte animation_index_ = 0;             // Index of current pattern.
+byte monochrome_animation_index_ = 0;  // Index of current monochrome pattern.
+byte static_color_index_ = 0;          // Index of current static color.
+byte palette_index_ = 0;               // Index of current color palette.
 
 // Input handlers
 ModeButtonHandler mode_button_handler_(MODE_BUTTON_PIN);
@@ -65,6 +66,9 @@ AnimationList monochrome_animations_ = {
     animations::monochromePulse,
     animations::monochromeRainbow,
 };
+AnimationList palette_animations_ = {
+  animations::paletteAnimation,
+};
 
 // Available color definitions can be found at
 // https://github.com/FastLED/FastLED/blob/master/pixeltypes.h
@@ -84,6 +88,15 @@ const ColorCode colors_[] = {
     ColorCode::Blue,
 };
 
+CRGBPalette16 palettes_[] = {
+  CloudColors_p,
+  OceanColors_p,
+  ForestColors_p,
+  LavaColors_p,
+  HeatColors_p,
+  PartyColors_p,
+};
+
 void setup(void) {
   #ifdef DEBUG
   Serial.begin(SERIAL_BAUD_RATE);
@@ -91,6 +104,7 @@ void setup(void) {
   #endif
 
   setupInputHandlers();
+  animations::palette_ = palettes_[palette_index_];
 
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds_, NUM_LEDS)
@@ -112,10 +126,13 @@ void loop(void) {
     case Mode::Static:
       break;
     case Mode::MonochromeAnimated:
-      monochrome_animations_[monochrome_pattern_index_](leds_);
+      monochrome_animations_[monochrome_animation_index_](leds_);
       break;
     case Mode::Animated:
-      full_color_animations_[pattern_index_](leds_);
+      full_color_animations_[animation_index_](leds_);
+      break;
+    case Mode::PaletteAnimated:
+      palette_animations_[0](leds_);
       break;
   }
 
@@ -140,11 +157,16 @@ void updateInputHandlers(void) {
 }
 
 void nextPattern(void) {
-  pattern_index_ = (pattern_index_ + 1) % ARRAY_SIZE(full_color_animations_);
+  animation_index_ = (animation_index_ + 1) % ARRAY_SIZE(full_color_animations_);
 }
 
 void nextMonochromePattern(void) {
-  monochrome_pattern_index_ = (monochrome_pattern_index_ + 1) % ARRAY_SIZE(monochrome_animations_);
+  monochrome_animation_index_ = (monochrome_animation_index_ + 1) % ARRAY_SIZE(monochrome_animations_);
+}
+
+void nextPalette(void) {
+  palette_index_ = (palette_index_ + 1) % ARRAY_SIZE(palettes_);
+  animations::palette_ = palettes_[palette_index_];
 }
 
 void nextStaticColor(void) {
@@ -215,17 +237,22 @@ void OptionButtonHandler::onButtonPressed(void) {
     case Mode::Animated:
       nextPattern();
       PRINT("nextPattern:");
-      PRINTLN(pattern_index_);
+      PRINTLN(animation_index_);
       break;
     case Mode::MonochromeAnimated:
       nextMonochromePattern();
       PRINT("nextMonochromePattern:");
-      PRINTLN(monochrome_pattern_index_);
+      PRINTLN(monochrome_animation_index_);
       break;
     case Mode::Static:
       nextStaticColor();
       PRINT("nextStaticColor:");
       PRINTLN(static_color_index_);
+      break;
+    case Mode::PaletteAnimated:
+      nextPalette();
+      PRINT("nextPalette:");
+      PRINTLN(palette_index_);
       break;
   }
 }

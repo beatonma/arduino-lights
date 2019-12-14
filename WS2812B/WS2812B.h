@@ -7,7 +7,8 @@
 enum Mode: byte {
   Static = 0,              // All lights same color, no animation
   MonochromeAnimated = 1,  // All lights same base hue with animation
-  Animated = 2,            // Animations with any color
+  PaletteAnimated = 2,     // Same as MonochromeAnimated but using predefined sets of colors
+  Animated = 3,            // Animations with any color
 };
 
 void setupInputHandlers(void);
