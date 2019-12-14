@@ -45,6 +45,7 @@ uint8_t animation_index_ = 0;             // Index of current pattern.
 uint8_t monochrome_animation_index_ = 0;  // Index of current monochrome pattern.
 uint8_t static_color_index_ = 0;          // Index of current static color.
 uint8_t palette_index_ = 0;               // Index of current color palette.
+uint8_t palette_animation_index_ = 0;     // Index of current palette animation.
 
 // Input handlers
 ModeButtonHandler mode_button_handler_(MODE_BUTTON_PIN);
@@ -68,14 +69,12 @@ AnimationList monochrome_animations_ = {
     animations::monochromeRainbow,
 };
 AnimationList palette_animations_ = {
-  animations::paletteAnimation,
+  animations::paletteFlow,
+  animations::paletteGlitter,
 };
 
 // Available color definitions can be found at
 // https://github.com/FastLED/FastLED/blob/master/pixeltypes.h
-// TODO replace HTMLColorCode with palletes (via PALETTEOF) for each color so we
-// can mix in 'themes' like cloud/lava/ocean:
-// https://github.com/FastLED/FastLED/blob/master/colorpalettes.h
 const ColorCode colors_[] = {
     ColorCode::Purple,
     ColorCode::HotPink,
@@ -90,12 +89,12 @@ const ColorCode colors_[] = {
 };
 
 CRGBPalette16 palettes_[] = {
+  unicornPalette(),
   CloudColors_p,
   OceanColors_p,
   ForestColors_p,
-  LavaColors_p,
-  HeatColors_p,
   PartyColors_p,
+  LavaColors_p,
 };
 
 void setup(void) {
@@ -106,6 +105,8 @@ void setup(void) {
 
   setupInputHandlers();
   animations::palette_ = palettes_[palette_index_];
+  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
+  animations::hue_ = animations::static_color_hsv_.hue;
 
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds_, NUM_LEDS)
@@ -113,8 +114,6 @@ void setup(void) {
   FastLED.setTemperature(COLOR_TEMPERATURE);
 
   PRINTLN("OK GO");
-
-  animatePowerOn();
 }
 
 void loop(void) {
@@ -125,6 +124,8 @@ void loop(void) {
 
   switch (mode_) {
     case Mode::Static:
+      animations::transitionLinearToSolid(leds_, getCurrentColor());
+
       break;
     case Mode::MonochromeAnimated:
       monochrome_animations_[monochrome_animation_index_](leds_);
@@ -133,7 +134,7 @@ void loop(void) {
       full_color_animations_[animation_index_](leds_);
       break;
     case Mode::PaletteAnimated:
-      palette_animations_[0](leds_);
+      palette_animations_[palette_animation_index_](leds_);
       break;
   }
 
@@ -165,58 +166,25 @@ void nextMonochromePattern(void) {
   monochrome_animation_index_ = (monochrome_animation_index_ + 1) % ARRAY_SIZE(monochrome_animations_);
 }
 
+void nextPaletteAnimation(void) {
+  palette_animation_index_ = (palette_animation_index_ + 1) % ARRAY_SIZE(palette_animations_);
+}
+
 void nextPalette(void) {
   palette_index_ = (palette_index_ + 1) % ARRAY_SIZE(palettes_);
   animations::palette_ = palettes_[palette_index_];
 }
 
 void nextStaticColor(void) {
-  // CRGB current_color = getCurrentColor();
   static_color_index_ = (static_color_index_ + 1) % ARRAY_SIZE(colors_);
-  // CRGB next_color = getCurrentColor();
 
   animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
   animations::hue_ = animations::static_color_hsv_.hue;
-  fillStaticColor();
-  // blendColors(current_color, next_color);
+  animations::transition_progress_ = 0;
 }
 
 void nextMode(void) {
   mode_ = (mode_ + 1) % NUM_MODES;
-  if (mode_ == Mode::Static) {
-    fillStaticColor();
-  }
-}
-
-void animatePowerOn(void) {
-  // Animation that runs when the device is switched on.
-  updateInputHandlers();
-
-  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
-  animations::hue_ = animations::static_color_hsv_.hue;
-
-  fadeToBlackBy(leds_, NUM_LEDS, 255);
-  FastLED.setBrightness(brightness_);
-
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds_[i] = toCRGB(ColorCode::Purple);
-
-    FastLED.show();
-    delay(1000 / frames_per_second_);
-  }
-
-  fillStaticColor();
-}
-
-void blendColors(CRGB current_color, CRGB next_color, int speed = 30) {
-  for (int progress = 0; progress < 255; progress += speed) {
-    CRGB blended = blend(current_color, next_color, progress);
-    fill_solid(leds_, NUM_LEDS, blended);
-
-    FastLED.show();
-    delay(1000 / frames_per_second_);
-  }
-  fillStaticColor();
 }
 
 void fillStaticColor(void) {
@@ -262,6 +230,9 @@ void OptionButtonHandler::onLongPress(void) {
   switch (mode_) {
     case Mode::MonochromeAnimated:
       nextStaticColor();
+      break;
+    case Mode::PaletteAnimated:
+      nextPaletteAnimation();
       break;
   }
 }
