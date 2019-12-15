@@ -1,3 +1,4 @@
+/** @file */
 #include "animations.h"
 #include <FastLED.h>
 #include "hardware-config.h"
@@ -8,8 +9,12 @@ namespace animations {
 CRGBPalette16 palette_;
 
 void paletteFlow(CRGB leds[]) {
-    FADE(20);
     fill_palette(leds, NUM_LEDS, hue_, 15, palette_, 240, LINEARBLEND);
+}
+
+void paletteFlowWithGlitter(CRGB leds[]) {
+    fill_palette(leds, NUM_LEDS, hue_, 15, palette_, 240, LINEARBLEND);
+    addGlitter(leds);
 }
 
 void paletteGlitter(CRGB leds[]) {
