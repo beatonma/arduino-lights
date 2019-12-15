@@ -1,3 +1,4 @@
+/** @file */
 #include <FastLED.h>
 
 #define PALETTEOFEIGHT(A, B, C, D, E, F, G, H) CRGBPalette16(toCRGB(A), toCRGB(B), toCRGB(C), toCRGB(D), toCRGB(E), toCRGB(F), toCRGB(G), toCRGB(H), toCRGB(A), toCRGB(B), toCRGB(C), toCRGB(D), toCRGB(E), toCRGB(F), toCRGB(G), toCRGB(H))
@@ -94,7 +95,8 @@ typedef enum : uint32_t {
   Lime = 0x00FF00,
   LimeGreen = 0x32CD32,
   Linen = 0xFAF0E6,
-  Magenta = 0xFF00FF,
+  // Magenta = 0xFF00FF,
+  Magenta = 0x800080,
   Maroon = 0x800000,
   MediumAquamarine = 0x66CDAA,
   MediumBlue = 0x0000CD,
@@ -128,7 +130,8 @@ typedef enum : uint32_t {
   Plaid = 0xCC5533,
   Plum = 0xDDA0DD,
   PowderBlue = 0xB0E0E6,
-  Purple = 0x800080,
+  // Purple = 0x800080,
+  Purple = 0x6600FF,
   Red = 0xFF0000,
   RosyBrown = 0xBC8F8F,
   RoyalBlue = 0x4169E1,
@@ -172,29 +175,49 @@ CRGB toCRGB(const ColorCode color_code) {
     return CRGB(color_code);
 }
 
+
+namespace palettes {
+
 FASTLED_USING_NAMESPACE
+/**
+ * Unicorns and marshmallows: pastel pinks and blues
+ */
 CRGBPalette16 unicornPalette() {
   return CRGBPalette16(
+    ColorCode::Brown,
     ColorCode::Purple,
-    ColorCode::Purple,
-    ColorCode::Purple,
-    ColorCode::HotPink,
+    ColorCode::Coral,
+    ColorCode::DodgerBlue,
 
     ColorCode::LightCyan,
-    ColorCode::Coral,
-    ColorCode::Aquamarine,
-    ColorCode::LightPink,
+    ColorCode::Crimson,
+    ColorCode::DeepPink,
+    ColorCode::LightSeaGreen,
 
     ColorCode::Purple,
-    ColorCode::LightPink,
+    ColorCode::FloralWhite,
     ColorCode::DeepPink,
-    ColorCode::DeepPink,
+    ColorCode::HotPink,
 
-    ColorCode::LightPink,
+    ColorCode::Indigo,
     ColorCode::HotPink,
     ColorCode::LightPink,
-    ColorCode::HotPink
+    ColorCode::FireBrick
+  );
+}
+
+CRGBPalette16 summerPalette() {
+  return PALETTEOFEIGHT(
+    ColorCode::Chartreuse,
+    ColorCode::DarkGoldenrod,
+    ColorCode::DarkOrange,
+    ColorCode::ForestGreen,
+    ColorCode::SkyBlue,
+    ColorCode::Cyan,
+    ColorCode::DarkGoldenrod,
+    ColorCode::ForestGreen
   );
 }
 
 FASTLED_NAMESPACE_END
+} // namespace palettes
