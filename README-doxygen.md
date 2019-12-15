@@ -1,6 +1,6 @@
 # Arduino LED controllers
 
-![Finished light box](docs/html/lightbox.jpg)
+![Finished light box](lightbox.jpg)
 
 This project controls LEDs attached to an Arduino Uno using the FastLED library. It uses an attached potentiometer and two buttons for choosing different modes, colors, animations, brightness, color temperature, and animation speed.
 
