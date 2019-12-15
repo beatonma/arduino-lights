@@ -1,5 +1,5 @@
+/** @file */
 #include "input.h"
-#include <Arduino.h>
 #include <stdlib.h>
 
 class AbstractPotentiometerHandler: AbstractInputHandler
@@ -11,7 +11,7 @@ public:
   // to be a purposeful action and not just caused by noise in the circuit.
   static const int NOISE_FLOOR = 5;
 
-  AbstractPotentiometerHandler(byte pin): AbstractInputHandler(pin)
+  AbstractPotentiometerHandler(uint8_t pin): AbstractInputHandler(pin)
   {
 
   }
@@ -24,7 +24,7 @@ public:
 
   void update(void)
   {
-    current_value_ = analogRead(pin_);
+    current_value_ = readAnalog();
     value_difference_ = abs(previous_value_ - current_value_);
 
     if (value_difference_ > ANALOG_READ_TOLERANCE) {
