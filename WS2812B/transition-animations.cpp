@@ -1,9 +1,7 @@
 /** @file */
-#include "interpolate.h"
 #include <FastLED.h>
 #include "hardware-config.h"
 #include "animations.h"
-#include "interpolate.h"
 
 namespace animations {
 uint8_t transition_progress_ = 0;
