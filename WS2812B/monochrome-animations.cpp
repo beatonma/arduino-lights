@@ -1,3 +1,4 @@
+/** @file */
 #include <FastLED.h>
 #include "animations.h"
 #include "hardware-config.h"
@@ -40,11 +41,6 @@ void monochromePulse(CRGB leds[]) {
   fill_solid(leds, NUM_LEDS,
              CHSV(static_color_hsv_.hue, static_color_hsv_.sat,
                   beatsin16(30 * animation_speed_multiplier_, 120, 255)));
-}
-
-void monochromeRainbow(CRGB leds[]) {
-  // A temporal rainbow - all lights are the same color but that color changes over time
-  fill_solid(leds, NUM_LEDS, CHSV(hue_, 240, 255));
 }
 
 }  // namespace animations

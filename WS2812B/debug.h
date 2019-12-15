@@ -1,3 +1,4 @@
+/** @file */
 #ifdef DEBUG
 #define PRINT(A) Serial.print(A)
 #define PRINTLN(A) Serial.println(A)

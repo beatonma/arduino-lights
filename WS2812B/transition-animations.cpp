@@ -1,3 +1,4 @@
+/** @file */
 #include "interpolate.h"
 #include <FastLED.h>
 #include "hardware-config.h"
