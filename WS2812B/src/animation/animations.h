@@ -3,6 +3,7 @@
 #ifndef ANIMATIONS_H
 #define ANIMATIONS_H
 #include <FastLED.h>
+#include "../../hardware-config.h"
 
 FASTLED_USING_NAMESPACE
 

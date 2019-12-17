@@ -19,8 +19,8 @@
 #ifndef WS2812B_H
 #define WS2812B_H
 #include <stdint.h>
-#include "input-buttons.cpp"
-#include "input-potentiometer.cpp"
+#include "src/input/input-buttons.cpp"
+#include "src/input/input-potentiometer.cpp"
 
 /**
  * Must be equal to number of values in ::Mode
@@ -31,27 +31,22 @@ enum Mode: uint8_t {
   MonochromeAnimated = 1,  ///< All lights same base hue with animation
   PaletteAnimated = 2,     ///< Same as MonochromeAnimated but using predefined sets of colors
   Animated = 3,            ///< Animations with any color,
-  // Auto = 4,                ///< Periodically change between any of the above, with any set of options.
 };
 
-
+void draw(void);
 
 void setupInputHandlers(void);
 void updateInputHandlers(void);
 
-void nextPattern(void);
 void nextMonochromePattern(void);
+void nextPaletteAnimation(void);
+void nextPalette(void);
+void nextPattern(void);
 void nextStaticColor(void);
 void nextMode(void);
 void nextAuto(void);      ///< Randomly choose a new mode, color, pattern, or animation type.
 
-// Animations with any color
-void animatePowerOn(void);
-
-// Solid, non animated color - all lights are the same
-void fillStaticColor(void);
 CRGB getCurrentColor(void);
-void blendColors(CRGB currentColor, CRGB nextColor, int speed = 30);
 
 class ModeButtonHandler: public AbstractButtonHandler {
   public:
