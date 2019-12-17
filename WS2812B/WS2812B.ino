@@ -25,13 +25,13 @@
 #include "debug.h"
 
 #define FASTLED_INTERNAL  // Disable pragma version message on compilation
-#include <stdint.h>
-#include "arrays.h"
 #include <FastLED.h>
-#include "animations.h"
+#include <stdint.h>
+#include "WS2812B.h"
+#include "arrays.h"
 #include "colors.h"
 #include "hardware-config.h"
-#include "WS2812B.h"
+#include "src/animation/animations.h"
 FASTLED_USING_NAMESPACE
 
 #if defined(FASTLED_VERSION) && (FASTLED_VERSION < 3001000)
