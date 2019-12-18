@@ -1,7 +1,6 @@
 /** @file */
 #include "animations.h"
 #include <FastLED.h>
-#include "hardware-config.h"
 
 FASTLED_USING_NAMESPACE
 namespace animations {
