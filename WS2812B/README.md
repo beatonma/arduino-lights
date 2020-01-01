@@ -37,8 +37,8 @@ These are available from any mode and affect all modes.
 Long-press the `Mode button` to toggle on/off (off by default). When enabled, the lights will automatically change (different mode, colour, or animation) every 30 seconds.
 
 ### Change animation speed
-Hold down the `Mode button` while you turn the `Brightness knob`. Left = slow, Right = fast.
+Hold down the `Mode button` while you turn the `Brightness knob`. Left = slow (one-tenth the default), Right = fast (twice the default).
 
 ### Change the colour temperature
-Hold down the `Option button` while you turn the `Brightness knob`. Left = redder, Right = bluer. Default is fully to the right which removes the temperature effect completely.
+Hold down the `Option button` while you turn the `Brightness knob`. Left = redder, Right = bluer. There are ten temperatures available. Default is fully to the right which removes the temperature effect completely.
 
