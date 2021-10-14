@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "src/input/input-buttons.cpp"
 #include "src/input/input-potentiometer.cpp"
+#include "src/input/input-proximity.cpp"
 
 /**
  * Must be equal to number of values in ::Mode
@@ -69,6 +70,16 @@ class BrightnessPotentiometerHandler: public AbstractPotentiometerHandler {
   void onValueChangedNoModifier(int value);       ///< Called when the pot is turned with no other inputs
   void onValueChangedWithModeButton(int value);   ///< Called when the pot is turned while the Mode button is held down
   void onValueChangedWithOptionButton(int value); ///< Called when the pot is turned while the Option button is held down
+};
+
+class PirHandler: public AbstractPirHandler {
+  public:
+  PirHandler(uint8_t pin): AbstractPirHandler(pin) {}
+  void onMotionEventStart();
+  void onMotionEventContinued();
+  void onMotionEventEnd();
+  void onIdle();
+  void onChange();
 };
 
 #endif

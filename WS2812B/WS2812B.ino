@@ -12,6 +12,7 @@
  *   - ::PaletteAnimated
  *   - ::Animated
  *   - ::Auto
+ *
  * - Implemented hardware controls:
  *  - Change brightness by turning pot: BrightnessPotentiometerHandler::onValueChangedNoModifier
  *  - Change mode by pressing Mode button: ModeButtonHandler::onButtonPressed
@@ -44,8 +45,8 @@ CRGB leds_[NUM_LEDS];
 
 uint8_t frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
 
-uint8_t mode_ = Mode::Static;
-uint8_t brightness_ = MAX_BRIGHTNESS;
+uint8_t mode_ = Mode::PaletteAnimated;
+uint8_t brightness_ = 180;
 
 /// Index of current pattern.
 uint8_t animation_index_ = 0;
@@ -65,16 +66,16 @@ uint8_t palette_animation_index_ = 0;
 bool auto_cycle_ = false; ///< If true, modes and colors will be changed automatically.
 
 // Input handlers
-ModeButtonHandler mode_button_handler_(MODE_BUTTON_PIN);
-OptionButtonHandler option_button_handler_(OPTION_BUTTON_PIN);
-BrightnessPotentiometerHandler brightness_potentiometer_handler_(BRIGHTNESS_POT_PIN);
+PirHandler proximity_handler_(PROXIMITY_DETECTOR_PIN);
+// ModeButtonHandler mode_button_handler_(MODE_BUTTON_PIN);
+// OptionButtonHandler option_button_handler_(OPTION_BUTTON_PIN);
+// BrightnessPotentiometerHandler brightness_potentiometer_handler_(BRIGHTNESS_POT_PIN);
 
 typedef void (*AnimationList[])(CRGB* leds);
 /**
  * Animations used when mode_ is ::Animated
  */
 AnimationList full_color_animations_ = {
-  // animations::polychromeSplash,
   animations::polychromeRainbow,
   animations::polychromeRainbowWithGlitter,
   animations::polychromeConfetti,
@@ -182,7 +183,6 @@ void loop(void) {
     animations::hue_++;
   }
 
-  // if (mode_ == Mode::Auto) {
   if (auto_cycle_) {
     EVERY_N_SECONDS(30) {
       nextAuto();
@@ -214,14 +214,11 @@ void draw(void) {
 }
 
 void setupInputHandlers(void) {
-  mode_button_handler_.setup();
-  option_button_handler_.setup();
+  proximity_handler_.setup();
 }
 
 void updateInputHandlers(void) {
-  brightness_potentiometer_handler_.update();
-  mode_button_handler_.update();
-  option_button_handler_.update();
+  proximity_handler_.update();
 }
 
 void nextPattern(void) {
@@ -279,127 +276,148 @@ CRGB getCurrentColor(void) {
   return toCRGB(colors_[static_color_index_]);
 }
 
+void PirHandler::onMotionEventStart(void) {
+  brightness_ = MAX_BRIGHTNESS;
+}
+
+void PirHandler::onMotionEventContinued(void) {
+
+}
+
+void PirHandler::onMotionEventEnd(void) {
+  brightness_ = 0;
+}
+
+void PirHandler::onIdle(void) {
+
+}
+
+void PirHandler::onChange(void) {
+
+}
+
+
 /**
  * Cycle through ::Mode%s
  */
-void ModeButtonHandler::onButtonPressed(void) {
-  nextMode();
-  PRINT("nextMode:");
-  PRINTLN(mode_);
-}
+// void ModeButtonHandler::onButtonPressed(void) {
+//   nextMode();
+//   PRINT("nextMode:");
+//   PRINTLN(mode_);
+// }
 
 /**
  * Toggle automatic selection of colors.
  */
-void ModeButtonHandler::onLongPress(void) {
-  auto_cycle_ = !auto_cycle_;
-  PRINT("auto: ");
-  PRINTLN(auto_cycle_);
-}
+// void ModeButtonHandler::onLongPress(void) {
+//   auto_cycle_ = !auto_cycle_;
+//   PRINT("auto: ");
+//   PRINTLN(auto_cycle_);
+// }
 
 /**
  * Cycle through main color/animation options.
  */
-void OptionButtonHandler::onButtonPressed(void) {
-  switch (mode_) {
-    case Mode::Animated:
-      nextPattern();
-      PRINT("nextPattern:");
-      PRINTLN(animation_index_);
-      break;
-    case Mode::MonochromeAnimated:
-      nextMonochromePattern();
-      PRINT("nextMonochromePattern:");
-      PRINTLN(monochrome_animation_index_);
-      break;
-    case Mode::Static:
-      nextStaticColor();
-      PRINT("nextStaticColor: ");
-      PRINT(static_color_index_);
-      PRINT(" ");
-      PRINTLN(colors_[static_color_index_]);
-      break;
-    case Mode::PaletteAnimated:
-      nextPalette();
-      PRINT("nextPalette:");
-      PRINTLN(palette_index_);
-      break;
-  }
-}
+// void OptionButtonHandler::onButtonPressed(void) {
+//   switch (mode_) {
+//     case Mode::Animated:
+//       nextPattern();
+//       PRINT("nextPattern:");
+//       PRINTLN(animation_index_);
+//       break;
+//     case Mode::MonochromeAnimated:
+//       nextMonochromePattern();
+//       PRINT("nextMonochromePattern:");
+//       PRINTLN(monochrome_animation_index_);
+//       break;
+//     case Mode::Static:
+//       nextStaticColor();
+//       PRINT("nextStaticColor: ");
+//       PRINT(static_color_index_);
+//       PRINT(" ");
+//       PRINTLN(colors_[static_color_index_]);
+//       break;
+//     case Mode::PaletteAnimated:
+//       nextPalette();
+//       PRINT("nextPalette:");
+//       PRINTLN(palette_index_);
+//       break;
+//   }
+// }
 
 /**
  * Cycle through additional animation/color options.
  */
-void OptionButtonHandler::onLongPress(void) {
-  switch (mode_) {
-    case Mode::MonochromeAnimated:
-      nextStaticColor();
-      break;
-    case Mode::PaletteAnimated:
-      nextPaletteAnimation();
-      break;
-  }
-}
+// void OptionButtonHandler::onLongPress(void) {
+//   switch (mode_) {
+//     case Mode::MonochromeAnimated:
+//       nextStaticColor();
+//       break;
+//     case Mode::PaletteAnimated:
+//       nextPaletteAnimation();
+//       break;
+//   }
+// }
 
-void BrightnessPotentiometerHandler::onValueChanged(const int value) {
-  if (mode_button_handler_.isDown()) {
-    onValueChangedWithModeButton(value);
-  }
-  else if (option_button_handler_.isDown()) {
-    onValueChangedWithOptionButton(value);
-  }
-  else {
-    onValueChangedNoModifier(value);
-  }
-}
-
+// void BrightnessPotentiometerHandler::onValueChanged(const int value) {
+//   if (mode_button_handler_.isDown()) {
+//     onValueChangedWithModeButton(value);
+//   }
+//   else if (option_button_handler_.isDown()) {
+//     onValueChangedWithOptionButton(value);
+//   }
+//   else {
+//     onValueChangedNoModifier(value);
+//   }
+// }
+//
 /**
  * Change LED brightness based on pot position.
  */
-void BrightnessPotentiometerHandler::onValueChangedNoModifier(const int value) {
-  // Handle fuzziness at extreme positions to avoid flickering.
-  if (value < 20) {
-    brightness_ = MIN_BRIGHTNESS;
-  } else if (value > 1010) {
-    brightness_ = MAX_BRIGHTNESS;
-  } else {
-    brightness_ = map(value, 0, 1023, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-  }
-}
-
+// void BrightnessPotentiometerHandler::onValueChangedNoModifier(const int value) {
+//   // Handle fuzziness at extreme positions to avoid flickering.
+//   if (value < 20) {
+//     brightness_ = MIN_BRIGHTNESS;
+//   } else if (value > 1010) {
+//     brightness_ = MAX_BRIGHTNESS;
+//   } else {
+//     brightness_ = map(value, 0, 1023, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+//   }
+// }
+//
 /**
  * Change animation speed by turning pot while Mode button is held.
  */
-void BrightnessPotentiometerHandler::onValueChangedWithModeButton(const int value) {
-  mode_button_handler_.consumeAction();  // Cancel any further callbacks from the button.
+// void BrightnessPotentiometerHandler::onValueChangedWithModeButton(const int value) {
+  // mode_button_handler_.consumeAction();  // Cancel any further callbacks from the button.
 
-  animations::animation_speed_multiplier_ = (float) map(value, 0, 1023, 1, 20) / 10.f;
-  frames_per_second_ = animations::animation_speed_multiplier_ * FRAMES_PER_SECOND_DEFAULT;
+  // animations::animation_speed_multiplier_ = (float) map(value, 0, 1023, 1, 20) / 10.f;
+  // frames_per_second_ = animations::animation_speed_multiplier_ * FRAMES_PER_SECOND_DEFAULT;
 
-  PRINT(animations::animation_speed_multiplier_);
-  PRINT("x -> ");
-  PRINT(frames_per_second_);
-  PRINTLN("fps");
-}
-
+  // PRINT(animations::animation_speed_multiplier_);
+  // PRINT("x -> ");
+  // PRINT(frames_per_second_);
+  // PRINTLN("fps");
+// }
+//
 /**
  * Change LED color temperature by turning pot while Option button is held.
  */
-void BrightnessPotentiometerHandler::onValueChangedWithOptionButton(const int value) {
-  option_button_handler_.consumeAction();  // Cancel any further callbacks from the button.
+// void BrightnessPotentiometerHandler::onValueChangedWithOptionButton(const int value) {
+  // option_button_handler_.consumeAction();  // Cancel any further callbacks from the button.
 
-  // Change color temperature by holding Option button while turning the brightness pot.
-  uint32_t temperature;
-  if (value < 20) {
-    temperature = temperatures_[0];
-  }
-  else if (value > 1010) {
-    temperature = temperatures_[ARRAY_SIZE(temperatures_) - 1];
-  }
-  else {
-    temperature = temperatures_[map(value, 20, 1010, 0, ARRAY_SIZE(temperatures_) - 1)];
-  }
-  FastLED.setTemperature(CRGB(temperature));
-}
+  // // Change color temperature by holding Option button while turning the brightness pot.
+  // uint32_t temperature;
+  // if (value < 20) {
+  //   temperature = temperatures_[0];
+  // }
+  // else if (value > 1010) {
+  //   temperature = temperatures_[ARRAY_SIZE(temperatures_) - 1];
+  // }
+  // else {
+  //   temperature = temperatures_[map(value, 20, 1010, 0, ARRAY_SIZE(temperatures_) - 1)];
+  // }
+  // FastLED.setTemperature(CRGB(temperature));
+// }
 
 FASTLED_NAMESPACE_END
