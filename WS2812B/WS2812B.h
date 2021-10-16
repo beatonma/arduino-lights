@@ -28,10 +28,12 @@
  */
 #define NUM_MODES 4
 enum Mode: uint8_t {
-  Static = 0,              ///< All lights same color, no animation
-  MonochromeAnimated = 1,  ///< All lights same base hue with animation
-  PaletteAnimated = 2,     ///< Same as MonochromeAnimated but using predefined sets of colors
-  Animated = 3,            ///< Animations with any color,
+  Static = 0,              // All lights same color, no animation
+  MonochromeAnimated = 1,  // All lights same base hue with animation
+  PaletteAnimated = 2,     // Same as MonochromeAnimated but using predefined sets of colors
+  Animated = 3,            // Animations with any color,
+  Halloween = 4,           // Halloween animations,
+  Deactivated = 5,         // Animations disabled
 };
 
 void draw(void);

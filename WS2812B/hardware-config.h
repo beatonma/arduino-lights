@@ -26,7 +26,11 @@ FASTLED_NAMESPACE_END
 
 #define SERIAL_BAUD_RATE 9600
 
-#define NUM_LEDS 20
+#define NUM_LEDS 42
+
+// For halloween
+#define ROWS_LEDS 6
+#define PER_ROW_LEDS 8
 
 #define DATA_PIN 4
 #define BRIGHTNESS_POT_PIN 0

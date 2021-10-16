@@ -4,6 +4,8 @@
 #define ANIMATIONS_H
 #include <FastLED.h>
 #include "../../hardware-config.h"
+#define DEBUG
+#include "../../debug.h"
 
 FASTLED_USING_NAMESPACE
 
@@ -19,6 +21,12 @@ extern CRGBPalette16 palette_;
 extern uint8_t transition_progress_;
 
 void addGlitter(CRGB leds[], CRGB glitter_color = GLITTER_COLOR, fract8 chance_of_glitter = CHANCE_OF_GLITTER);
+
+// Halloween infinity mirror tunnel animations.
+void halloweenRingPulse(CRGB leds[]);
+void halloweenColumnPulse(CRGB leds[]);
+void halloween(CRGB leds[]);
+void deactivate(CRGB leds[]);
 
 // Animations with any color
 void polychromeBpm(CRGB leds[]);
