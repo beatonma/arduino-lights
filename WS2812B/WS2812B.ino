@@ -22,7 +22,7 @@
  *  - Some modes also allow control of a second parameter by long-pressing the Option button: OptionButtonHandler::onLongPress
  *  - Change color temperature by holding Option button while turning pot: BrightnessPotentiometerHandler::onValueChangedWithOptionButton
  */
-#define DEBUG
+// #define DEBUG
 #include "debug.h"
 
 #define FASTLED_INTERNAL  // Disable pragma version message on compilation
@@ -43,79 +43,35 @@ FASTLED_USING_NAMESPACE
 
 CRGB leds_[NUM_LEDS];
 
-uint8_t frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
+const uint8_t frames_per_second_ = FRAMES_PER_SECOND_DEFAULT;
 
 uint8_t mode_ = Mode::Halloween;
 uint8_t brightness_ = MAX_BRIGHTNESS;
 
-// Index of current pattern.
-uint8_t animation_index_ = 0;
-
-// Index of current monochrome pattern.
-uint8_t monochrome_animation_index_ = 0;
-
 // Index of current static color.
-uint8_t static_color_index_ = 0;
-
-// Index of current color palette.
-uint8_t palette_index_ = 0;
-
-// Index of current palette animation.
-uint8_t palette_animation_index_ = 0;
+uint8_t color_index_ = 0;
 
 // Index of current halloween animation.
 uint8_t halloween_animations_index_ = 0;
-
-bool auto_cycle_ = false; // If true, modes and colors will be changed automatically.
 
 // Input handlers
 PirHandler proximity_handler_(PROXIMITY_DETECTOR_PIN);
 
 typedef void (*AnimationList[])(CRGB* leds);
 
-/**
- * Animations used when mode_ is ::Animated
- */
-AnimationList full_color_animations_ = {
-  // animations::polychromeRainbow,
-  // animations::polychromeRainbowWithGlitter,
-  // animations::polychromeConfetti,
-  // animations::polychromeSinelon,
-  // animations::polychromeJuggle,
-  // animations::polychromeBpm,
-  // animations::monochromeRainbow,
-};
-
-/**
- *
- */
 boolean activated = true;
-
-/**
- * Animations used when mode_ is ::MonochromeAnimated
- */
-AnimationList monochrome_animations_ = {
-  animations::halloweenRingPulse,
-  animations::monochromeJuggle,
-  animations::monochromeSinelon,
-  animations::monochromePulse,
-  // animations::monochromeGlitter,
-};
+const long deactivate_timeout = 3000;
+long deactivate_at = -1;
 
 AnimationList halloween_animations_ = {
+  animations::halloweenAlternatingColumns2,
+  animations::halloweenAlternatingColumns,
   animations::halloweenColumnPulse,
   animations::halloweenRingPulse,
+  animations::halloweenVortex,
   animations::monochromeJuggle,
 };
 
-/**
- * Animations used when mode_ is ::PaletteAnimated
- */
-AnimationList palette_animations_ = {
-  animations::paletteFlow,
-  animations::paletteFlowWithGlitter,
-  animations::paletteGlitter,
-};
 
 /**
  * Available color definitions can be found at
@@ -123,53 +79,21 @@ AnimationList palette_animations_ = {
  */
 const uint32_t colors_[] = {
   ColorCode::Red,
-  // ColorCode::Red,
-  // ColorCode::Red,
-  // ColorCode::Red,
-  // ColorCode::Red,
-  // ColorCode::Red,
-  // ColorCode::White,
-  // ColorCode::OrangeRed,
-  // ColorCode::OrangeRed,
-  // ColorCode::OrangeRed,
-  // ColorCode::Purple,
-  // ColorCode::Magenta,
-  // ColorCode::HotPink,
-  // ColorCode::FairyLightNCC,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Red,
+  ColorCode::Purple,
   ColorCode::Yellow,
-  // ColorCode::Green,
-  // ColorCode::Cyan,
-  // ColorCode::Blue,
+  ColorCode::Green,
+  ColorCode::Cyan,
+  ColorCode::Blue,
 };
-
-/**
- * Themed collections of colors used in ::PaletteAnimated.
- */
-CRGBPalette16 palettes_[] = {
-  LavaColors_p,
-  palettes::unicornPalette(),
-  PartyColors_p,
-  palettes::summerPalette(),
-  CloudColors_p,
-  OceanColors_p,
-  ForestColors_p,
-};
-
-/**
- * LED color temperature may be adjusted to any of these values.
- */
-// const uint32_t temperatures_[] = {
-//   ColorTemperature::Candle,
-//   ColorTemperature::Tungsten40W,
-//   ColorTemperature::Tungsten100W,
-//   ColorTemperature::Halogen,
-//   ColorTemperature::CarbonArc,
-//   ColorTemperature::HighNoonSun,
-//   ColorTemperature::DirectSunlight,
-//   ColorTemperature::OvercastSky,
-//   ColorTemperature::ClearBlueSky,
-//   ColorTemperature::UncorrectedTemperature,
-// };
 
 
 /**
@@ -182,7 +106,6 @@ void setup(void) {
   #endif
 
   setupInputHandlers();
-  animations::palette_ = palettes_[palette_index_];
   animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
   animations::hue_ = animations::static_color_hsv_.hue;
 
@@ -190,6 +113,8 @@ void setup(void) {
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds_, NUM_LEDS)
       .setCorrection(COLOR_CORRECTION);
   FastLED.setTemperature(COLOR_TEMPERATURE);
+
+  deactivate_at = millis();
 
   PRINTLN("OK GO");
 }
@@ -199,13 +124,16 @@ void setup(void) {
  */
 void loop(void) {
   updateInputHandlers();
+
   EVERY_N_MILLISECONDS(20) {
     animations::hue_++;
   }
 
-  if (auto_cycle_) {
-    EVERY_N_SECONDS(30) {
-      nextAuto();
+  if (deactivate_at > 0) {
+    long diff = millis() - deactivate_at;
+    if (diff > deactivate_timeout) {
+      mode_ = Mode::Deactivated;
+      deactivate_at = -1;
     }
   }
 
@@ -216,22 +144,6 @@ void loop(void) {
 
     case Mode::Halloween:
       halloween_animations_[halloween_animations_index_](leds_);
-      break;
-
-    case Mode::Static:
-      animations::transitionLinearToSolid(leds_, getCurrentColor());
-      break;
-
-    case Mode::MonochromeAnimated:
-      monochrome_animations_[monochrome_animation_index_](leds_);
-      break;
-
-    case Mode::Animated:
-      full_color_animations_[animation_index_](leds_);
-      break;
-
-    case Mode::PaletteAnimated:
-      palette_animations_[palette_animation_index_](leds_);
       break;
   }
 
@@ -252,29 +164,16 @@ void updateInputHandlers(void) {
   proximity_handler_.update();
 }
 
-void nextPattern(void) {
-  animation_index_ = (animation_index_ + 1) % ARRAY_SIZE(full_color_animations_);
-}
-
-void nextMonochromePattern(void) {
-  monochrome_animation_index_ = (monochrome_animation_index_ + 1) % ARRAY_SIZE(monochrome_animations_);
-}
-
 void nextHalloweenAnimation(void) {
   halloween_animations_index_ = (halloween_animations_index_ + 1) % ARRAY_SIZE(halloween_animations_);
 }
 
-void nextPaletteAnimation(void) {
-  palette_animation_index_ = (palette_animation_index_ + 1) % ARRAY_SIZE(palette_animations_);
-}
-
-void nextPalette(void) {
-  palette_index_ = (palette_index_ + 1) % ARRAY_SIZE(palettes_);
-  animations::palette_ = palettes_[palette_index_];
+void randomHalloweenAnimation(void) {
+  halloween_animations_index_ = ANY_INDEX(halloween_animations_);
 }
 
 void nextStaticColor(void) {
-  static_color_index_ = (static_color_index_ + 1) % ARRAY_SIZE(colors_);
+  color_index_ = (color_index_ + 1) % ARRAY_SIZE(colors_);
 
   animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
   animations::hue_ = animations::static_color_hsv_.hue;
@@ -282,48 +181,27 @@ void nextStaticColor(void) {
 }
 
 void randomColor(void) {
-  // static_color_index_ = rand() % sizeof(colors_);
-  static_color_index_ = ANY_INDEX(colors_);
+  color_index_ = ANY_INDEX(colors_);
 
   animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
   animations::hue_ = animations::static_color_hsv_.hue;
   animations::transition_progress_ = 0;
 }
 
-void nextMode(void) {
-  mode_ = (mode_ + 1) % NUM_MODES;
-}
-
-/**
- * Randomly choose a new ::Mode, animation or color.
- */
-void nextAuto(void) {
-  const uint8_t result = random8();
-  if (result < 85) {
-    // Change the mode.
-    nextMode();
-  }
-  else if (result < 170) {
-    // Change the animation.
-    nextPattern();
-    nextMonochromePattern();
-    nextPaletteAnimation();
-    nextHalloweenAnimation();
-  }
-  else {
-    // Change the color.
-    nextPalette();
-    nextStaticColor();
-  }
-}
-
 CRGB getCurrentColor(void) {
-  return toCRGB(colors_[static_color_index_]);
+  return toCRGB(colors_[color_index_]);
 }
 
 void PirHandler::onMotionEventStart(void) {
-  randomColor();
+  if (mode_ != Mode::Deactivated) {
+    deactivate_at = millis();
+    return;
+  }
+
+  randomHalloweenAnimation();
   nextHalloweenAnimation();
+
+  deactivate_at = -1;
   mode_ = Mode::Halloween;
 }
 
@@ -332,7 +210,8 @@ void PirHandler::onMotionEventContinued(void) {
 }
 
 void PirHandler::onMotionEventEnd(void) {
-  mode_ = Mode::Deactivated;
+  deactivate_at = millis();
+  PRINTLN(deactivate_at);
 }
 
 void PirHandler::onIdle(void) {
@@ -342,129 +221,5 @@ void PirHandler::onIdle(void) {
 void PirHandler::onChange(void) {
 
 }
-
-
-/**
- * Cycle through ::Mode%s
- */
-// void ModeButtonHandler::onButtonPressed(void) {
-//   nextMode();
-//   PRINT("nextMode:");
-//   PRINTLN(mode_);
-// }
-
-/**
- * Toggle automatic selection of colors.
- */
-// void ModeButtonHandler::onLongPress(void) {
-//   auto_cycle_ = !auto_cycle_;
-//   PRINT("auto: ");
-//   PRINTLN(auto_cycle_);
-// }
-
-/**
- * Cycle through main color/animation options.
- */
-// void OptionButtonHandler::onButtonPressed(void) {
-//   switch (mode_) {
-//     case Mode::Animated:
-//       nextPattern();
-//       PRINT("nextPattern:");
-//       PRINTLN(animation_index_);
-//       break;
-//     case Mode::MonochromeAnimated:
-//       nextMonochromePattern();
-//       PRINT("nextMonochromePattern:");
-//       PRINTLN(monochrome_animation_index_);
-//       break;
-//     case Mode::Static:
-//       nextStaticColor();
-//       PRINT("nextStaticColor: ");
-//       PRINT(static_color_index_);
-//       PRINT(" ");
-//       PRINTLN(colors_[static_color_index_]);
-//       break;
-//     case Mode::PaletteAnimated:
-//       nextPalette();
-//       PRINT("nextPalette:");
-//       PRINTLN(palette_index_);
-//       break;
-//   }
-// }
-
-/**
- * Cycle through additional animation/color options.
- */
-// void OptionButtonHandler::onLongPress(void) {
-//   switch (mode_) {
-//     case Mode::MonochromeAnimated:
-//       nextStaticColor();
-//       break;
-//     case Mode::PaletteAnimated:
-//       nextPaletteAnimation();
-//       break;
-//   }
-// }
-
-// void BrightnessPotentiometerHandler::onValueChanged(const int value) {
-//   if (mode_button_handler_.isDown()) {
-//     onValueChangedWithModeButton(value);
-//   }
-//   else if (option_button_handler_.isDown()) {
-//     onValueChangedWithOptionButton(value);
-//   }
-//   else {
-//     onValueChangedNoModifier(value);
-//   }
-// }
-//
-/**
- * Change LED brightness based on pot position.
- */
-// void BrightnessPotentiometerHandler::onValueChangedNoModifier(const int value) {
-//   // Handle fuzziness at extreme positions to avoid flickering.
-//   if (value < 20) {
-//     brightness_ = MIN_BRIGHTNESS;
-//   } else if (value > 1010) {
-//     brightness_ = MAX_BRIGHTNESS;
-//   } else {
-//     brightness_ = map(value, 0, 1023, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-//   }
-// }
-//
-/**
- * Change animation speed by turning pot while Mode button is held.
- */
-// void BrightnessPotentiometerHandler::onValueChangedWithModeButton(const int value) {
-  // mode_button_handler_.consumeAction();  // Cancel any further callbacks from the button.
-
-  // animations::animation_speed_multiplier_ = (float) map(value, 0, 1023, 1, 20) / 10.f;
-  // frames_per_second_ = animations::animation_speed_multiplier_ * FRAMES_PER_SECOND_DEFAULT;
-
-  // PRINT(animations::animation_speed_multiplier_);
-  // PRINT("x -> ");
-  // PRINT(frames_per_second_);
-  // PRINTLN("fps");
-// }
-//
-/**
- * Change LED color temperature by turning pot while Option button is held.
- */
-// void BrightnessPotentiometerHandler::onValueChangedWithOptionButton(const int value) {
-  // option_button_handler_.consumeAction();  // Cancel any further callbacks from the button.
-
-  // // Change color temperature by holding Option button while turning the brightness pot.
-  // uint32_t temperature;
-  // if (value < 20) {
-  //   temperature = temperatures_[0];
-  // }
-  // else if (value > 1010) {
-  //   temperature = temperatures_[ARRAY_SIZE(temperatures_) - 1];
-  // }
-  // else {
-  //   temperature = temperatures_[map(value, 20, 1010, 0, ARRAY_SIZE(temperatures_) - 1)];
-  // }
-  // FastLED.setTemperature(CRGB(temperature));
-// }
 
 FASTLED_NAMESPACE_END

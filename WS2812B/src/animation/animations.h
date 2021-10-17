@@ -25,7 +25,9 @@ void addGlitter(CRGB leds[], CRGB glitter_color = GLITTER_COLOR, fract8 chance_o
 // Halloween infinity mirror tunnel animations.
 void halloweenRingPulse(CRGB leds[]);
 void halloweenColumnPulse(CRGB leds[]);
-void halloween(CRGB leds[]);
+void halloweenVortex(CRGB leds[]);
+void halloweenAlternatingColumns(CRGB leds[]);
+void halloweenAlternatingColumns2(CRGB leds[]);
 void deactivate(CRGB leds[]);
 
 // Animations with any color
