@@ -64,11 +64,18 @@ const long deactivate_timeout = 3000;
 long deactivate_at = -1;
 
 AnimationList halloween_animations_ = {
+  animations::halloweenColumnPulse,
+  animations::halloweenAlternatingColumns2,
   animations::halloweenAlternatingColumns2,
   animations::halloweenAlternatingColumns,
+  animations::halloweenAlternatingColumns,
+  animations::halloweenColumnPulse,
+  animations::halloweenColumnPulse,
   animations::halloweenColumnPulse,
   animations::halloweenRingPulse,
-  animations::halloweenVortex,
+  animations::halloweenRingPulse,
+  animations::halloweenRingPulse,
+  animations::monochromePulse,
   animations::monochromeJuggle,
 };
 
@@ -79,20 +86,6 @@ AnimationList halloween_animations_ = {
  */
 const uint32_t colors_[] = {
   ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Red,
-  ColorCode::Purple,
-  ColorCode::Yellow,
-  ColorCode::Green,
-  ColorCode::Cyan,
-  ColorCode::Blue,
 };
 
 
@@ -106,8 +99,8 @@ void setup(void) {
   #endif
 
   setupInputHandlers();
-  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
-  animations::hue_ = animations::static_color_hsv_.hue;
+  animations::color_hsv_ = rgb2hsv_approximate(getCurrentColor());
+  animations::hue_ = animations::color_hsv_.hue;
 
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds_, NUM_LEDS)
@@ -175,17 +168,19 @@ void randomHalloweenAnimation(void) {
 void nextStaticColor(void) {
   color_index_ = (color_index_ + 1) % ARRAY_SIZE(colors_);
 
-  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
-  animations::hue_ = animations::static_color_hsv_.hue;
+  animations::color_hsv_ = rgb2hsv_approximate(getCurrentColor());
+  animations::hue_ = animations::color_hsv_.hue;
   animations::transition_progress_ = 0;
+  animations::alt_color_hsv_ = CHSV(animations::color_hsv_.hue + 30, animations::color_hsv_.sat, animations::color_hsv_.val);
 }
 
 void randomColor(void) {
   color_index_ = ANY_INDEX(colors_);
 
-  animations::static_color_hsv_ = rgb2hsv_approximate(getCurrentColor());
-  animations::hue_ = animations::static_color_hsv_.hue;
+  animations::color_hsv_ = rgb2hsv_approximate(getCurrentColor());
+  animations::hue_ = animations::color_hsv_.hue;
   animations::transition_progress_ = 0;
+  animations::alt_color_hsv_ = CHSV(animations::color_hsv_.hue + 30, animations::color_hsv_.sat, animations::color_hsv_.val);
 }
 
 CRGB getCurrentColor(void) {
@@ -198,8 +193,11 @@ void PirHandler::onMotionEventStart(void) {
     return;
   }
 
+
   randomHalloweenAnimation();
-  nextHalloweenAnimation();
+  randomColor();
+
+  animations::multicolor_ = rand() > RAND_MAX / 2;
 
   deactivate_at = -1;
   mode_ = Mode::Halloween;

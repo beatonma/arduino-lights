@@ -8,9 +8,13 @@ namespace animations {
 #define COLUMNS PER_ROW_LEDS
 #define ROWS ROWS_LEDS
 
-CHSV static_color_hsv_ = CHSV(0, 0, 0);
+CHSV color_hsv_ = CHSV(0, 0, 0);
+CHSV alt_color_hsv_ = CHSV(0, 0, 0);
+boolean multicolor_ = true;
+
 int current_row_ = 0;
 int current_column_ = 0;
+int previous_value_ = 0;
 boolean direction = true;
 
 void monochromeJuggle(CRGB leds[]) {
@@ -18,14 +22,14 @@ void monochromeJuggle(CRGB leds[]) {
   FADE(20);
   for (int i = 0; i < 3; i++) {
     leds[beatsin16(i + 4, 0, NUM_LEDS - 1)] |= CHSV(
-        static_color_hsv_.hue, static_color_hsv_.sat, static_color_hsv_.val);
+        color_hsv_.hue, color_hsv_.sat, color_hsv_.val);
   }
 }
 
 void monochromeGlitter(CRGB leds[]) {
   FADE(3);
   if (random8() < CHANCE_OF_GLITTER) {
-    leds[random16(NUM_LEDS)] += static_color_hsv_;
+    leds[random16(NUM_LEDS)] += color_hsv_;
   }
 }
 
@@ -34,27 +38,28 @@ void monochromeSinelon(CRGB leds[]) {
   // with the sweep 'overlayed'
   FADE(5);
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] |= CHSV(static_color_hsv_.hue, static_color_hsv_.sat, 60);
+    leds[i] |= CHSV(color_hsv_.hue, color_hsv_.sat, 60);
   }
   for (int i = 0; i < 1; i++) {  // i = number of fliers
-    leds[beatsin16((i + 3) * animation_speed_multiplier_, 0, NUM_LEDS - 1)] |= static_color_hsv_;
+    leds[beatsin16((i + 3) * animation_speed_multiplier_, 0, NUM_LEDS - 1)] |= color_hsv_;
   }
 }
 
 void monochromePulse(CRGB leds[]) {
   // Pulse the brightness of all lights together
   fill_solid(leds, NUM_LEDS,
-             CHSV(static_color_hsv_.hue, static_color_hsv_.sat,
+             CHSV(color_hsv_.hue, color_hsv_.sat,
                   beatsin16(30 * animation_speed_multiplier_, 120, 255)));
 }
 
 
 
+const int halloween_bpm_ = 30;
 void setColumn(CRGB leds[], int column, CRGB color) {
   for (int i = column; i < NUM_LEDS; i += PER_ROW_LEDS) {
     int id = i;
     if (id > NUM_LEDS) continue;
-    leds[id] |= static_color_hsv_;
+    leds[id] |= color_hsv_;
   }
 }
 
@@ -63,7 +68,7 @@ void setRow(CRGB leds[], int row, CRGB color) {
     int id = (row * PER_ROW_LEDS) + i;
     if (id > NUM_LEDS) continue;
 
-    leds[id] = static_color_hsv_;
+    leds[id] = color_hsv_;
   }
 }
 
@@ -82,18 +87,27 @@ void setGrid(CRGB leds[], CRGB color, int x, int y) {
   leds[index] = color;
 }
 
+CHSV altColor() {
+  return multicolor_ ? color_hsv_ : alt_color_hsv_;
+}
+
 /**
  * Light up each ring in sequence from top to bottom.
  */
 void halloweenRingPulse(CRGB leds[]) {
   FADE(15);
-  int row = beatsin16(60, 0, ROWS);
+  int row = beatsin16(halloween_bpm_, 0, ROWS);
 
   // Lock to one vertical direction.
   if (row == ROWS || row < current_row_) current_row_ = row;
   else return;
 
-  setRow(leds, current_row_, static_color_hsv_);
+  if (current_row_ % 2 == 0) {
+  setRow(leds, current_row_, color_hsv_);
+  }
+  else {
+    setRow(leds, current_row_, altColor());
+  }
 }
 
 /**
@@ -103,11 +117,16 @@ void halloweenColumnPulse(CRGB leds[]) {
   FADE(15);
 
   // Lock to a single rotation direction
-  int column = beatsin16(60, 0, COLUMNS);
+  int column = beatsin16(halloween_bpm_, 0, COLUMNS);
   if (column == COLUMNS || column < current_column_) current_column_ = column;
   else return;
 
-  setColumn(leds, current_column_, static_color_hsv_);
+  if (current_column_ % 2 == 0) {
+    setColumn(leds, current_column_, color_hsv_);
+  }
+  else {
+    setColumn(leds, current_column_, altColor());
+  }
 }
 
 void halloweenVortex(CRGB leds[]) {
@@ -121,7 +140,7 @@ void halloweenVortex(CRGB leds[]) {
     nextColumn();
   }
 
-  setGrid(leds, static_color_hsv_, current_row_, current_column_);
+  setGrid(leds, color_hsv_, current_row_, current_column_);
 }
 
 /**
@@ -130,15 +149,15 @@ void halloweenVortex(CRGB leds[]) {
 void halloweenAlternatingColumns(CRGB leds[]) {
   FADE(15);
 
-  int rowAscending = beatsin16(30, 0, ROWS);
+  int rowAscending = beatsin16(halloween_bpm_ / 2, 0, ROWS);
   int rowDescending = ROWS - rowAscending;
 
   for (int i = 0; i < COLUMNS; i++) {
     if (i % 2 == 0) {
-      setGrid(leds, static_color_hsv_, rowAscending, i);
+      setGrid(leds, color_hsv_, rowAscending, i);
     }
     else {
-      setGrid(leds, static_color_hsv_, rowDescending, i);
+      setGrid(leds, altColor(), rowDescending, i);
     }
   }
 }
@@ -149,7 +168,7 @@ void halloweenAlternatingColumns(CRGB leds[]) {
 void halloweenAlternatingColumns2(CRGB leds[]) {
   FADE(15);
 
-  int row = beatsin16(60, 0, ROWS);
+  int row = beatsin16(halloween_bpm_, 0, ROWS);
 
   if (row == 0) {
     direction = true;
@@ -162,12 +181,54 @@ void halloweenAlternatingColumns2(CRGB leds[]) {
 
   for (int i = 0; i < COLUMNS; i++) {
     if (i % 2 == 0 && direction) {
-      setGrid(leds, static_color_hsv_, row, i);
+      setGrid(leds, color_hsv_, row, i);
     }
     else if (i % 2 == 1 && !direction) {
-      setGrid(leds, static_color_hsv_, row, i);
+      setGrid(leds, altColor(), row, i);
     }
   }
+}
+
+void halloweenFullPulse(CRGB leds[]) {
+  // monochromePulse(leds);
+  // FADE(15);
+
+  // int floor = 10;
+  // int pulse = beatsin16(15, 0, 100);
+
+  // if (pulse < floor) {
+  //   direction = true;
+  // }
+  // else if (pulse > MAX_BRIGHTNESS * 3.5) {
+  //   direction = false;
+  // }
+
+  // if (direction) {
+  // if (pulse < 50) {
+  //   transitionLinearToSolid(leds, color_hsv_);
+  // }
+  // else {
+  //   FADE(10);
+  // }
+
+  //   // brightness = max(beatsin16(12, 0, MAX_BRIGHTNESS * 2), previous_value_);
+  // }
+  // else {
+  //   // brightness = pulse;
+  //   FADE(15);
+  // }
+
+  // PRINTLN(direction);
+  // PRINTLN(pulse);
+
+  // previous_value_ = brightness;
+
+  // fill_solid(
+  //   leds, NUM_LEDS,
+  //   CHSV(color_hsv_.hue, color_hsv_.sat,
+  //   brightness
+  //   )
+  // );
 }
 
 void deactivate(CRGB leds[]) {

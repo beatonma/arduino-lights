@@ -15,7 +15,9 @@ namespace animations {
 #define CHANCE_OF_GLITTER 80
 #define GLITTER_COLOR CRGB::Pink
 extern uint8_t hue_;
-extern CHSV static_color_hsv_;
+extern CHSV color_hsv_;
+extern CHSV alt_color_hsv_;
+extern boolean multicolor_;
 extern float animation_speed_multiplier_;
 extern CRGBPalette16 palette_;
 extern uint8_t transition_progress_;
@@ -28,6 +30,7 @@ void halloweenColumnPulse(CRGB leds[]);
 void halloweenVortex(CRGB leds[]);
 void halloweenAlternatingColumns(CRGB leds[]);
 void halloweenAlternatingColumns2(CRGB leds[]);
+void halloweenFullPulse(CRGB leds[]);
 void deactivate(CRGB leds[]);
 
 // Animations with any color

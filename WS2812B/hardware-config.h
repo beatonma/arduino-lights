@@ -26,17 +26,17 @@ FASTLED_NAMESPACE_END
 
 #define SERIAL_BAUD_RATE 9600
 
-#define NUM_LEDS 42
+#define NUM_LEDS 108
 
 // For halloween
-#define ROWS_LEDS 6
-#define PER_ROW_LEDS 8
+#define ROWS_LEDS 10
+#define PER_ROW_LEDS NUM_LEDS / ROWS_LEDS
 
-#define DATA_PIN 4
+#define DATA_PIN 6
 #define BRIGHTNESS_POT_PIN 0
 #define MODE_BUTTON_PIN 9
 #define OPTION_BUTTON_PIN 8
-#define PROXIMITY_DETECTOR_PIN 3
+#define PROXIMITY_DETECTOR_PIN 10
 
 #define MAX_BRIGHTNESS 200
 #define MIN_BRIGHTNESS 5
@@ -44,3 +44,6 @@ FASTLED_NAMESPACE_END
 #define ARDUINO
 
 #endif
+// black positive
+// white data
+// brown ground
